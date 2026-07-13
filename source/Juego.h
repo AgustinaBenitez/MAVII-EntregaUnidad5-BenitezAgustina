@@ -14,20 +14,12 @@
 // Escuchador de colisiones
 class EscuchadorColisiones : public b2ContactListener {
 
-//private:
-
-//    Sound* sonidoPelota = nullptr; // Puntero para acceder al sonido desde acá
-
 public:
 
     EscuchadorColisiones();
-    //void SetSonidoPelota(Sound* sonido); // Método para ponerle el sonido
     void BeginContact(b2Contact* contacto) override;
 
 };
-
-// Estados del juego
-//enum EstadoJuego {INICIO, JUGANDO, TERMINADO };
 
 // Estados del juego EXPANDIDOS
 enum EstadoJuego {
@@ -35,7 +27,7 @@ enum EstadoJuego {
     INICIO,
     ESPERANDO_TIRO,       // Waiting
     PELOTA_EN_AIRE,       // Running
-    ANOTACION_DETECTADA,  // EventDetected (Exito)
+    ANOTACION_DETECTADA,  // EventDetected (Éxito)
     FALLO_DETECTADO,      // EventDetected (Fallo)
     TERMINADO             // Finished
 
@@ -79,8 +71,6 @@ private:
 
     // Para mostrar la info en pantalla
     int puntaje;
-
-    //bool puedeRecargar;
 
 public:
 

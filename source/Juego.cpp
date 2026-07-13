@@ -2,11 +2,7 @@
 
 #include <raylib.h>
 
-// Implementación de los escuchadores
-//void EscuchadorColisiones::SetSonidoPelota(Sound* sonido) {
-//    sonidoPelota = sonido;
-//}
-
+// Implementación del escuchador
 // El Listener ahora es pasivo. No toma decisiones ni reproduce sonidos.
 EscuchadorColisiones::EscuchadorColisiones() {}
 
@@ -25,84 +21,17 @@ void EscuchadorColisiones::BeginContact(b2Contact* contacto) {
     // Identifico a la Pelota
     Pelota* pelota = dynamic_cast<Pelota*>(objA);
 
-    //if (pelota == nullptr) {
-    //    pelota = dynamic_cast<Pelota*>(objB);
-    //}
-
     if (!pelota) {
         pelota = dynamic_cast<Pelota*>(objB);
     }
 
-    // Si la pelota existe y ninguna de las dos cosas que chocaron es un sensor (para no hacer ruido al pasar limpiamente por el aro)
-//    if (pelota != nullptr && !fixA->IsSensor() && !fixB->IsSensor()) {
-//        if (sonidoPelota != nullptr) {
-//            PlaySound(*sonidoPelota); // Me ayudó Gemini
-//        }
-//    }
-//
-//    // Identifico al Aro
-//    Aro* aro = dynamic_cast<Aro*>(objA);
-//    if (aro == nullptr) {
-//        aro = dynamic_cast<Aro*>(objB);
-//    }
-//
-//    // Identifico al Borde (Piso)
-//    Borde* piso = dynamic_cast<Borde*>(objA);
-//    if (piso == nullptr) {
-//        piso = dynamic_cast<Borde*>(objB);
-//    }
-//
-//    // Entonces si chocaron la Pelota y el Aro
-//    if (pelota != nullptr && aro != nullptr) {
-//
-//        bool tocoSensor = false;
-//        b2Fixture* fixtureSensor = nullptr; // Guardo el puntero del sensor para medirlo
-//
-//        // Reviso si la fixture A era el sensor del aro
-//        if (fixA->GetBody() == aro->GetCuerpo() && fixA->IsSensor()) {
-//            tocoSensor = true;
-//            fixtureSensor = fixA;
-//        }
-//        // Si no, reviso si la fixture B era el sensor del aro
-//        else if (fixB->GetBody() == aro->GetCuerpo() && fixB->IsSensor()) {
-//            tocoSensor = true;
-//            fixtureSensor = fixB;
-//        }
-//
-//        if (tocoSensor) {
-//
-//            // Obtengo el ID del fixture que se tocó
-//            uintptr_t idSensor = fixtureSensor->GetUserData().pointer;
-//
-//            // Obtengo la velocidad lineal de la pelota para verificar que esté bajando
-//            b2Vec2 velPelota = pelota->GetCuerpo()->GetLinearVelocity();
-//
-//            if (idSensor == 1) {
-//                // Boca del aro
-//                // Solo activo si la pelota viene bajando (velocidad Y positiva)
-//                if (velPelota.y > 0.0f) {
-//                    pelota->SetCruzandoAro(true);
-//                }
-//            }
-//            else if (idSensor == 2) {
-//                // Si ya cruzó el aro, registro la anotación.
-//                // Quito la restricción de velocidad Y para asegurar el registro.
-//                if (pelota->GetCruzandoAro()) {
-//                    pelota->MarcarAnotacion();
-//                    pelota->SetCruzandoAro(false); // Reseteo al anotar
-//                }
-//            }
-//        }
-//
-//    }
-//
-//    // Si chocaron la Pelota y el Borde (Piso)
-//    if (pelota != nullptr && piso != nullptr) {
-//        pelota->MarcarEnSuelo();
-//    }
-//
-
     if (pelota) { // Me ayudó Gemini porque no me salía bien la lógica, me cuesta mucho lo de los punteros todavía
+
+        // Lógica de sonido: Si chocan dos cosas sólidas (ninguno es sensor), hay rebote
+        if (!fixA->IsSensor() && !fixB->IsSensor()) {
+            pelota->SetRebote(true);
+        }
+
         Aro* aro = dynamic_cast<Aro*>(objA);
         if (!aro) aro = dynamic_cast<Aro*>(objB);
 
@@ -120,6 +49,7 @@ void EscuchadorColisiones::BeginContact(b2Contact* contacto) {
         if (piso) {
             pelota->SetContactoSuelo(true);
         }
+
     }
 
 }
@@ -157,7 +87,6 @@ void Juego::Iniciar() {
 
     // Configuro el escuchador de colisiones y le inyecto el sonido de la pelota
     escuchador = std::make_unique<EscuchadorColisiones>();
-    //escuchador->SetSonidoPelota(&sonidoPelota);
     mundo->SetContactListener(escuchador.get());
 
     // Cargo todos los objetos
@@ -172,16 +101,6 @@ void Juego::Actualizar() {
 
     UpdateMusicStream(musicaFondo); // Obligatorio para que suene la música
 
-//    if (estadoActual == INICIO) {
-//        if (IsKeyPressed(KEY_ENTER)) {
-//            cronometro->Reiniciar(); // Para asegurar que los 2 minutos arranquen intactos
-//            estadoActual = JUGANDO;
-//        }
-//    }
-//
-//    if (estadoActual == JUGANDO) {
-//
-
     // Si el juego está en cualquier estado activo (porque ahora son más de uno), corre el reloj y las físicas
     if (estadoActual != INICIO && estadoActual != TERMINADO) {
 
@@ -189,7 +108,7 @@ void Juego::Actualizar() {
         cronometro->Actualizar();
 
         // Si el tiempo llega a cero, se termina el juego
-        if (cronometro->SeAcaboElTiempo()) { //&& estadoActual == JUGANDO) {
+        if (cronometro->SeAcaboElTiempo()) {
 
             estadoActual = TERMINADO;
             PlaySound(sonidoFin);
@@ -208,60 +127,30 @@ void Juego::Actualizar() {
             aro->Actualizar();
         }
 
-        // Controles y cambio de estado visual del tirador
-//        if (tirador) {
-//            if (IsKeyDown(KEY_SPACE)) {
-//                tirador->Cargar();
-//                estadoTirador = LISTO; // Textura con pelota en mano
-//            }
-//            if (IsKeyReleased(KEY_SPACE)) {
-//                tirador->Disparar(pelotaPrincipal->GetCuerpo());
-//                estadoTirador = SALTANDO; // Textura estirado
-//            }
-//        }
-//
-//        // Actualizo la lógica del tirador
-//        if (tirador) tirador->Actualizar();
-//
-//        // Para nueva pelota
-//        if (IsKeyPressed(KEY_N)) {
-//
-//            if (tirador && tirador->YaDisparo() && pelotaPrincipal) {
-//
-//                pelotaPrincipal->GetCuerpo()->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
-//                pelotaPrincipal->GetCuerpo()->SetAngularVelocity(0.0f);
-//                pelotaPrincipal->GetCuerpo()->SetTransform(b2Vec2(400.0f, 475.0f), 0.0f);
-//
-//                tirador->ReiniciarTiro();
-//                pelotaPrincipal->ResetearEstados();
-//            }
-//
-//        }
-//
-//
-//        if (pelotaPrincipal) {
-//            // Si pasó por el aro y todavía no sumó
-//            if (pelotaPrincipal->Anoto() && !pelotaPrincipal->FueContabilizada()) {
-//                puntaje++;
-//                PlaySound(sonidoAro);
-//                pelotaPrincipal->SetContabilizada(true);
-//
-//                // Le mato la velocidad horizontal (X = 0) para que caiga recta
-//                b2Vec2 vel = pelotaPrincipal->GetCuerpo()->GetLinearVelocity();
-//                pelotaPrincipal->GetCuerpo()->SetLinearVelocity(b2Vec2(0.0f, vel.y));
-//            }
-//
-//            // Si la pelota se fue por la derecha de la pantalla habilito presionar N
-//            if (pelotaPrincipal->GetCuerpo()->GetPosition().x > 1060.0f) {
-//                puedeRecargar = true;
-//            }
-//
-//            // Si tocó el suelo, habilito presionar N
-//            if (pelotaPrincipal->EnSuelo()) {
-//                puedeRecargar = true;
-//            }
-//        }
-//
+        // Actualizo la lógica del tirador
+        if (tirador) {
+            tirador->Actualizar();
+        }
+
+        // Lectura dle rebote para el sonido
+        if (pelotaPrincipal && pelotaPrincipal->GetRebote()) {
+            PlaySound(sonidoPelota);
+            pelotaPrincipal->SetRebote(false); // Lo apago enseguida
+        }
+
+    }
+
+    // Lógica para la tecla N (funciona siempre que el jugador la requiera)
+    if (estadoActual == PELOTA_EN_AIRE || estadoActual == ANOTACION_DETECTADA || estadoActual == FALLO_DETECTADO) {
+        if (IsKeyPressed(KEY_N)) {
+            pelotaPrincipal->GetCuerpo()->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
+            pelotaPrincipal->GetCuerpo()->SetAngularVelocity(0.0f);
+            pelotaPrincipal->GetCuerpo()->SetTransform(b2Vec2(400.0f, 476.0f), 0.0f);
+
+            tirador->ReiniciarTiro();
+            pelotaPrincipal->ResetearEstados();
+            estadoActual = ESPERANDO_TIRO;
+        }
     }
 
     // Máquina de estados principal --- Me ayudó un pcoo Gemini porque no me funcionaban bien los CASE
@@ -312,15 +201,7 @@ void Juego::Actualizar() {
 
         case ANOTACION_DETECTADA:
         case FALLO_DETECTADO:
-            if (IsKeyPressed(KEY_N)) {
-                pelotaPrincipal->GetCuerpo()->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
-                pelotaPrincipal->GetCuerpo()->SetAngularVelocity(0.0f);
-                pelotaPrincipal->GetCuerpo()->SetTransform(b2Vec2(400.0f, 475.0f), 0.0f);
-
-                tirador->ReiniciarTiro();
-                pelotaPrincipal->ResetearEstados();
-                estadoActual = ESPERANDO_TIRO; // Vuelve al estado base
-            }
+            // Vacíos porque la interrupción con N se maneja arriba
             break;
 
         case TERMINADO:
@@ -379,7 +260,7 @@ void Juego::Renderizar() {
             DrawText(linea3, (1058 - MeasureText(linea3, 30)) / 2, 600, 30, YELLOW);
 
         }
-        else if (estadoActual != TERMINADO) { //== JUGANDO) {
+        else if (estadoActual != TERMINADO) {
 
             // Calculo minutos y segundos reales
             int minutos = (int)cronometro->tiempoRestante / 60;
@@ -428,7 +309,7 @@ void Juego::Renderizar() {
             DrawText(textoPuntaje, (1058 - anchoPuntaje) / 2, 850, 40, YELLOW);
 
             // Dibujo la barra de fuerza solo si el tirador existe y todavía no disparó
-            if (tirador && estadoActual == ESPERANDO_TIRO) { //!tirador->YaDisparo()) {
+            if (tirador && estadoActual == ESPERANDO_TIRO) {
                 float porcentaje = tirador->GetPorcentajeFuerza();
 
                 // Tomo la posición del cuerpo físico del tirador
@@ -495,14 +376,12 @@ void Juego::Renderizar() {
 
 }
 
-
 void Juego::Reiniciar() {
 
     // Para que cada vez que se presione la tecla R, el estado del juego y del jugador se resetee
     estadoActual = ESPERANDO_TIRO; // Reemplaza al JUGANDO anterior
     estadoTirador = LISTO;
     puntaje = 0;
-    //puedeRecargar = false;
 
     // Limpio el vector por si toco la tecla R durante el juego
     objetos.clear();
