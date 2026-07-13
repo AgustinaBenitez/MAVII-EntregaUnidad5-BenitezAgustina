@@ -14,30 +14,47 @@
 // Escuchador de colisiones
 class EscuchadorColisiones : public b2ContactListener {
 
-private:
+//private:
 
-    Sound* sonidoPelota = nullptr; // Puntero para acceder al sonido desde acá
+//    Sound* sonidoPelota = nullptr; // Puntero para acceder al sonido desde acá
 
 public:
 
     EscuchadorColisiones();
-    void SetSonidoPelota(Sound* sonido); // Método para ponerle el sonido
+    //void SetSonidoPelota(Sound* sonido); // Método para ponerle el sonido
     void BeginContact(b2Contact* contacto) override;
 
 };
 
 // Estados del juego
-enum EstadoJuego { INICIO, JUGANDO, TERMINADO };
+//enum EstadoJuego {INICIO, JUGANDO, TERMINADO };
+
+// Estados del juego EXPANDIDOS
+enum EstadoJuego {
+
+    INICIO,
+    ESPERANDO_TIRO,       // Waiting
+    PELOTA_EN_AIRE,       // Running
+    ANOTACION_DETECTADA,  // EventDetected (Exito)
+    FALLO_DETECTADO,      // EventDetected (Fallo)
+    TERMINADO             // Finished
+
+};
 
 // Estados para controlar la animación del tirador
-enum EstadoTirador { LISTO, SALTANDO, REPOSO };
+enum EstadoTirador {
+    
+    LISTO,
+    SALTANDO,
+    REPOSO
+
+};
 
 class Juego {
 
 private:
 
     EstadoJuego estadoActual;
-
     EstadoTirador estadoTirador;
 
     // Mundo físico (contenedor) + objetos
@@ -63,7 +80,7 @@ private:
     // Para mostrar la info en pantalla
     int puntaje;
 
-    bool puedeRecargar;
+    //bool puedeRecargar;
 
 public:
 
